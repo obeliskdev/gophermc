@@ -1,0 +1,4 @@
+[submodule "generator/minecraft-data"]
+	path = generator/minecraft-data
+	url = https://github.com/PrismarineJS/minecraft-data.git
+	branch = master
