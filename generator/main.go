@@ -180,6 +180,7 @@ type (
 )
 
 var releaseVersionRegex = regexp.MustCompile(`^\d+\.\d+(\.\d+)?$`)
+var snapshotVersionRegex = regexp.MustCompile(`^\d{2}w\d{2}[a-z]$`)
 
 func main() {
 	_, currentFile, _, ok := runtime.Caller(0)
@@ -190,17 +191,26 @@ func main() {
 	generatorDir := filepath.Dir(currentFile)
 	baseDataDir := filepath.Join(generatorDir, "minecraft-data", "data", "pc")
 
-	versionToProtoNum := loadProtocolVersions(baseDataDir)
-	parsedVersions := loadAndParseProtocols(baseDataDir, versionToProtoNum)
+	versionToProtoNum, latestSnapshot := loadProtocolVersions(baseDataDir)
+	parsedVersions := loadAndParseProtocols(baseDataDir, versionToProtoNum, latestSnapshot)
 
 	if len(parsedVersions) == 0 {
 		log.Fatalf("FATAL: No protocol versions were successfully parsed. Check submodule path and file contents.")
 	}
 
 	sort.Slice(parsedVersions, func(i, j int) bool {
-		v1, _ := semver.NewVersion(parsedVersions[i].VersionStr)
-		v2, _ := semver.NewVersion(parsedVersions[j].VersionStr)
-		return v1.LessThan(v2)
+		v1, err1 := semver.NewVersion(parsedVersions[i].VersionStr)
+		v2, err2 := semver.NewVersion(parsedVersions[j].VersionStr)
+		if err1 == nil && err2 == nil {
+			return v1.LessThan(v2)
+		}
+		if err1 == nil && err2 != nil {
+			return true
+		}
+		if err1 != nil && err2 == nil {
+			return false
+		}
+		return parsedVersions[i].ProtocolVersion < parsedVersions[j].ProtocolVersion
 	})
 
 	td := templateData{
@@ -213,7 +223,7 @@ func main() {
 	generateFile(registryOutputFile, registryTemplate, "registry", td)
 }
 
-func loadAndParseProtocols(baseDataDir string, versionToProtoNum map[string]int32) []versionInfo {
+func loadAndParseProtocols(baseDataDir string, versionToProtoNum map[string]int32, latestSnapshot string) []versionInfo {
 	dirs, err := os.ReadDir(baseDataDir)
 	if err != nil {
 		log.Fatalf("FATAL: Failed to read submodule directory '%s'. Did you run 'git submodule update --init'?", baseDataDir)
@@ -221,10 +231,13 @@ func loadAndParseProtocols(baseDataDir string, versionToProtoNum map[string]int3
 
 	var parsedVersions []versionInfo
 	for _, dir := range dirs {
-		if !dir.IsDir() || !releaseVersionRegex.MatchString(dir.Name()) {
+		if !dir.IsDir() {
 			continue
 		}
 		versionStr := dir.Name()
+		if !releaseVersionRegex.MatchString(versionStr) && versionStr != latestSnapshot {
+			continue
+		}
 
 		protoPath := filepath.Join(baseDataDir, versionStr, "protocol.json")
 		protoData, err := os.ReadFile(protoPath)
@@ -356,7 +369,7 @@ func preParsePacketIDs(packetTypes map[string]interface{}) map[string]int32 {
 	return idMap
 }
 
-func loadProtocolVersions(baseDataDir string) map[string]int32 {
+func loadProtocolVersions(baseDataDir string) (map[string]int32, string) {
 	versionsPath := filepath.Join(baseDataDir, "common", "protocolVersions.json")
 	versionData, err := os.ReadFile(versionsPath)
 	if err != nil {
@@ -367,10 +380,16 @@ func loadProtocolVersions(baseDataDir string) map[string]int32 {
 		log.Fatalf("FATAL: Failed to parse %s: %v", versionsPath, err)
 	}
 	versionToProtoNum := make(map[string]int32)
+	var latestSnapshot string
+	var latestSnapshotProto int32
 	for _, v := range versionList {
 		versionToProtoNum[v.MinecraftVersion] = v.Version
+		if snapshotVersionRegex.MatchString(v.MinecraftVersion) && v.Version > latestSnapshotProto {
+			latestSnapshotProto = v.Version
+			latestSnapshot = v.MinecraftVersion
+		}
 	}
-	return versionToProtoNum
+	return versionToProtoNum, latestSnapshot
 }
 
 func findBestProtoNum(versionStr string, versionMap map[string]int32) int32 {

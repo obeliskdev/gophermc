@@ -3,6 +3,8 @@ package protocol
 import (
 	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 )
 
 type Definition struct {
@@ -61,5 +63,60 @@ func GetPacketID(v Version, s State, d Direction, p Packet) (int32, bool) {
 
 func VersionFromString(s string) (Version, bool) {
 	version, ok := stringToVersion[s]
-	return version, ok
+	if ok {
+		return version, true
+	}
+
+	major, minor, patch, hasPatch, ok := parseReleaseVersion(s)
+	if !ok {
+		return 0, false
+	}
+
+	bestPatch := -1
+	var bestVersion Version
+	for knownStr, knownVersion := range stringToVersion {
+		kMajor, kMinor, kPatch, _, kOK := parseReleaseVersion(knownStr)
+		if !kOK || kMajor != major || kMinor != minor {
+			continue
+		}
+
+		if hasPatch && kPatch > patch {
+			continue
+		}
+		if kPatch > bestPatch {
+			bestPatch = kPatch
+			bestVersion = knownVersion
+		}
+	}
+	if bestPatch >= 0 {
+		return bestVersion, true
+	}
+
+	return 0, false
+}
+
+func parseReleaseVersion(s string) (major int, minor int, patch int, hasPatch bool, ok bool) {
+	parts := strings.Split(s, ".")
+	if len(parts) != 2 && len(parts) != 3 {
+		return 0, 0, 0, false, false
+	}
+
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return 0, 0, 0, false, false
+	}
+	minor, err = strconv.Atoi(parts[1])
+	if err != nil {
+		return 0, 0, 0, false, false
+	}
+
+	if len(parts) == 3 {
+		patch, err = strconv.Atoi(parts[2])
+		if err != nil {
+			return 0, 0, 0, false, false
+		}
+		return major, minor, patch, true, true
+	}
+
+	return major, minor, 0, false, true
 }
