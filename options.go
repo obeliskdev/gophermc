@@ -2,8 +2,8 @@ package gophermc
 
 import (
 	"crypto/rsa"
-	"github.com/obeliskdev/gophermc/protocol"
 	"github.com/google/uuid"
+	"github.com/obeliskdev/gophermc/protocol"
 	"net"
 )
 
