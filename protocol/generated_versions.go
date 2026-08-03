@@ -50,10 +50,11 @@ const (
 	V1_21_8  Version = iota
 	V1_21_9  Version = iota
 	V1_21_11 Version = iota
+	V26_1    Version = iota
 )
 
 const First = V1_7
-const Latest = V1_21_11
+const Latest = V26_1
 
 var (
 	stringToVersion map[string]Version
@@ -106,6 +107,7 @@ func init() {
 		"1.21.8":  V1_21_8,
 		"1.21.9":  V1_21_9,
 		"1.21.11": V1_21_11,
+		"26.1":    V26_1,
 	}
 
 	versionToString = make(map[Version]string)

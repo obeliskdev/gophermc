@@ -5,7 +5,7 @@ package protocol
 // init registers all protocol definitions compiled from the JSON data.
 func init() {
 	protocolRegistry[V1_7] = &Definition{
-		ProtocolVersion: 4,
+		ProtocolVersion: 5,
 		PacketIDs: map[State]map[Direction]map[string]int32{
 			StateHandshaking: {
 				DirectionServerbound: {
@@ -4305,6 +4305,147 @@ func init() {
 					20: "ServerboundCookieResponse",
 					21: "ServerboundCustomPayload",
 					27: "ServerboundKeepAlive",
+				},
+			},
+			StateStatus: {
+				DirectionClientbound: {
+					0: "ClientboundStatusResponse",
+					1: "ClientboundPong",
+				},
+				DirectionServerbound: {
+					0: "ServerboundStatusRequest",
+					1: "ServerboundPing",
+				},
+			},
+		},
+	}
+	protocolRegistry[V26_1] = &Definition{
+		ProtocolVersion: 775,
+		PacketIDs: map[State]map[Direction]map[string]int32{
+			StateConfiguration: {
+				DirectionClientbound: {
+					"ClientboundConfigKeepAlive":     4,
+					"ClientboundConfigPing":          5,
+					"ClientboundCookieRequest":       0,
+					"ClientboundCustomPayload":       1,
+					"ClientboundDisconnect":          2,
+					"ClientboundFeatureFlags":        12,
+					"ClientboundFinishConfiguration": 3,
+					"ClientboundRegistryData":        7,
+					"ClientboundSelectKnownPacks":    14,
+				},
+				DirectionServerbound: {
+					"ServerboundClientSettings":      0,
+					"ServerboundConfigKeepAlive":     4,
+					"ServerboundConfigPong":          5,
+					"ServerboundCookieResponse":      1,
+					"ServerboundCustomPayload":       2,
+					"ServerboundFinishConfiguration": 3,
+					"ServerboundSelectKnownPacks":    7,
+				},
+			},
+			StateHandshaking: {
+				DirectionServerbound: {
+					"ServerboundHandshake": 0,
+				},
+			},
+			StateLogin: {
+				DirectionClientbound: {
+					"ClientboundCookieRequest":  5,
+					"ClientboundDisconnect":     0,
+					"ClientboundLoginSuccess":   2,
+					"ClientboundSetCompression": 3,
+				},
+				DirectionServerbound: {
+					"ServerboundCookieResponse":    4,
+					"ServerboundLoginAcknowledged": 3,
+					"ServerboundLoginStart":        0,
+				},
+			},
+			StatePlay: {
+				DirectionClientbound: {
+					"ClientboundCookieRequest": 21,
+					"ClientboundCustomPayload": 24,
+					"ClientboundDisconnect":    32,
+					"ClientboundJoinGame":      49,
+					"ClientboundKeepAlive":     44,
+					"ClientboundPong":          61,
+				},
+				DirectionServerbound: {
+					"ServerboundChatMessage":    9,
+					"ServerboundClientSettings": 14,
+					"ServerboundCookieResponse": 21,
+					"ServerboundCustomPayload":  22,
+					"ServerboundKeepAlive":      28,
+				},
+			},
+			StateStatus: {
+				DirectionClientbound: {
+					"ClientboundPong":           1,
+					"ClientboundStatusResponse": 0,
+				},
+				DirectionServerbound: {
+					"ServerboundPing":          1,
+					"ServerboundStatusRequest": 0,
+				},
+			},
+		},
+		PacketNames: map[State]map[Direction]map[int32]string{
+			StateConfiguration: {
+				DirectionClientbound: {
+					0:  "ClientboundCookieRequest",
+					1:  "ClientboundCustomPayload",
+					2:  "ClientboundDisconnect",
+					3:  "ClientboundFinishConfiguration",
+					4:  "ClientboundConfigKeepAlive",
+					5:  "ClientboundConfigPing",
+					7:  "ClientboundRegistryData",
+					12: "ClientboundFeatureFlags",
+					14: "ClientboundSelectKnownPacks",
+				},
+				DirectionServerbound: {
+					0: "ServerboundClientSettings",
+					1: "ServerboundCookieResponse",
+					2: "ServerboundCustomPayload",
+					3: "ServerboundFinishConfiguration",
+					4: "ServerboundConfigKeepAlive",
+					5: "ServerboundConfigPong",
+					7: "ServerboundSelectKnownPacks",
+				},
+			},
+			StateHandshaking: {
+				DirectionServerbound: {
+					0: "ServerboundHandshake",
+				},
+			},
+			StateLogin: {
+				DirectionClientbound: {
+					0: "ClientboundDisconnect",
+					2: "ClientboundLoginSuccess",
+					3: "ClientboundSetCompression",
+					5: "ClientboundCookieRequest",
+				},
+				DirectionServerbound: {
+					0: "ServerboundLoginStart",
+					3: "ServerboundLoginAcknowledged",
+					4: "ServerboundCookieResponse",
+				},
+			},
+			StatePlay: {
+				DirectionClientbound: {
+					21: "ClientboundCookieRequest",
+					24: "ClientboundCustomPayload",
+					32: "ClientboundDisconnect",
+					44: "ClientboundKeepAlive",
+					49: "ClientboundJoinGame",
+					61: "ClientboundPong",
+				},
+				DirectionServerbound: {
+					9:  "ServerboundChatMessage",
+					14: "ServerboundClientSettings",
+					21: "ServerboundCookieResponse",
+					22: "ServerboundCustomPayload",
+					28: "ServerboundKeepAlive",
 				},
 			},
 			StateStatus: {
